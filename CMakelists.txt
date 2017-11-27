@@ -1,0 +1,81 @@
+### GENERAL SETTINGS
+cmake_minimum_required(VERSION 2.8.11)
+
+# Create project
+set(APP_NAME "gomoku")
+project(${APP_NAME})
+
+### USEFUL VARIABLES
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+### COMPILATOR OPTIONS
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(APP_DIR ${PROJECT_SOURCE_DIR})
+set(BIN_OUTPUT_DIR ${APP_DIR}/bin)
+message("Starting generation for ${APP_NAME} in ${APP_DIR} - ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_VERSION})")
+
+### HEADERS FILES
+include_directories(
+        # --- INCLUDES BASE
+        ${APP_DIR}/includes/
+)
+
+# Enable debug symbols by default
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
+endif()
+
+### APP TARGET
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BIN_OUTPUT_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BIN_OUTPUT_DIR})
+
+message("The executable will be generated at ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+
+# Running moc/uic/rcc automatically
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
+message("Retrieving compilator options...")
+
+if (WIN32)
+    if (MSVC)
+        message("MSVC found!")
+    else (NOT MSVC)
+        message(FATAL_ERROR "MSVC compilator not found")
+    endif()
+endif()
+
+### LIBRARIES
+
+### APP SRCS
+file(GLOB_RECURSE SOURCE_GOMOKU_FILES			${APP_DIR}/srcs/*.cpp)
+file(GLOB_RECURSE SOURCE_GOMOKU_FILES_H		    ${APP_DIR}/srcs/*.h)
+file(GLOB_RECURSE SOURCE_GOMOKU_FILES_HPP		${APP_DIR}/srcs/*.hpp)
+
+# APP HEADERS
+file(GLOB_RECURSE HEADER_GOMOKU_FILES_H		    ${APP_DIR}/includes/*.h)
+file(GLOB_RECURSE HEADER_GOMOKU_FILES_HPP		${APP_DIR}/includes/*.hpp)
+
+### EXECUTABLE
+add_executable(${APP_NAME}
+        WIN32
+        ${SOURCE_GOMOKU_FILES}
+        ${HEADER_GOMOKU_FILES_H}
+        ${HEADER_GOMOKU_FILES_HPP}
+        ${SOURCE_GOMOKU_FILES_H}
+        ${SOURCE_GOMOKU_FILES_HPP}
+        )
+
+# Windows specific build steps
+if(WIN32)
+    file(GLOB_RECURSE DLL_LIB_FILES ${PROJECT_SOURCE_DIR}/lib/win/dll/*.dll)
+    if (DLL_LIB_FILES)
+        add_custom_command(TARGET ${APP_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${DLL_LIB_FILES} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    endif()
+    # Run winddeployqt if it can be found
+    find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt HINTS ${BIN_MSVC_PATH})
+    add_custom_command(TARGET ${APP_NAME} POST_BUILD COMMAND ${WINDEPLOYQT_EXECUTABLE} $<TARGET_FILE:${APP_NAME}>)
+endif()
