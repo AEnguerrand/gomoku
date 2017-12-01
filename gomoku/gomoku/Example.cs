@@ -20,11 +20,23 @@ class GomocupEngine : GomocupInterface
     List<List<char>> scoreBoard = new List<List<char>>();
     Random rand = new Random();
 
+    private static GomocupEngine instance;
+
+    public static GomocupEngine Instance
+    {
+        get
+        {
+            if (instance == null)
+                instance = new GomocupEngine();
+            return (instance);
+        }
+    }
+
     public override string brain_about
     {
         get
         {
-            return "name=\"Random\", author=\"Petr Lastovicka\", version=\"1.1\", country=\"Czech Republic\", www=\"http://petr.lastovicka.sweb.cz\"";
+            return "name=\"Random\", author=\"Maxime Cauv1\", version=\"1.1\", country=\"OzuLand\", www=\"http://petr.lastovicka.sweb.cz\"";
         }
     }
 

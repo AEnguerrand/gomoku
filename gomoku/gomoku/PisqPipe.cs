@@ -1,7 +1,10 @@
 ﻿/** functions that communicate with Piskvork manager through pipes */
 /** don't modify this file */
-using System;
 using System.Threading;
+using System; 
+using gomoku;
+
+delegate void ParamFunc(string param);
 
 abstract class GomocupInterface
 {
@@ -31,54 +34,18 @@ abstract class GomocupInterface
     abstract public void brain_end();  /* delete temporary files, free resources */
     virtual public void brain_eval(int x, int y) { } /* display evaluation of square [x,y] */
 
+    private CommandHandler cmdHandler;
 
-    private string cmd;
+    public string cmd;
     private AutoResetEvent event1;
     private ManualResetEvent event2;
 
     /** read a line from STDIN */
-    private void get_line()
+    public void get_line()
     {
         cmd = Console.ReadLine();
-        if (cmd == null) Environment.Exit(0);
-    }
-
-    /** parse coordinates x,y */
-    private bool parse_coord2(string param, out int x, out int y)
-    {
-        string[] p = param.Split(',');
-        if (p.Length == 2 && int.TryParse(p[0], out x) && int.TryParse(p[1], out y) && x >= 0 && y >= 0)
-            return true;
-        x = y = 0;
-        return false;
-    }
-
-    /** parse coordinates x,y */
-    private bool parse_coord(string param, out int x, out int y)
-    {
-        return parse_coord2(param, out x, out y) && x < width && y < height;
-    }
-
-    /** parse coordinates x,y and player number z */
-    private void parse_3int_chk(string param, out int x, out int y, out int z)
-    {
-        string[] p = param.Split(',');
-        if (!(p.Length == 3 && int.TryParse(p[0], out x) && int.TryParse(p[1], out y) && int.TryParse(p[2], out z)
-            && x >= 0 && y >= 0 && x < width && y < height))
-            x = y = z = 0;
-    }
-
-    /** return pointer to word after command if input starts with command, otherwise return NULL */
-    private static string get_cmd_param(string command, out string param)
-    {
-        param = "";
-        int pos = command.IndexOf(' ');
-        if (pos >= 0)
-        {
-            param = command.Substring(pos + 1).TrimStart(' ');
-            command = command.Substring(0, pos);
-        }
-        return command.ToLower();
+        if (cmd == null)
+            Environment.Exit(0);
     }
 
     /** send suggest */
@@ -88,7 +55,7 @@ abstract class GomocupInterface
     }
 
     /** write move to the pipe and update internal data structures */
-    protected void do_mymove(int x, int y)
+    public void do_mymove(int x, int y)
     {
         brain_my(x, y);
         Console.WriteLine("{0},{1}", x, y);
@@ -106,7 +73,7 @@ abstract class GomocupInterface
     }
 
     /** start thinking */
-    private void turn()
+    public void turn()
     {
         terminate = 0;
         event2.Reset();
@@ -114,13 +81,13 @@ abstract class GomocupInterface
     }
 
     /** stop thinking */
-    private void stop()
+    public void stop()
     {
         terminate = 1;
         event2.WaitOne();
     }
 
-    private void start()
+    public void start()
     {
         start_time = Environment.TickCount;
         stop();
@@ -131,147 +98,10 @@ abstract class GomocupInterface
         }
     }
 
-    /** do command cmd */
-    private void do_command()
-    {
-        string param, info;
-        int x, y, who, e;
-
-        switch (get_cmd_param(cmd, out param))
-        {
-            case "info":
-                switch (get_cmd_param(param, out info))
-                {
-                    case "max_memory":
-                        int.TryParse(info, out info_max_memory); break;
-                    case "timeout_match":
-                        int.TryParse(info, out info_timeout_match); break;
-                    case "timeout_turn":
-                        int.TryParse(info, out info_timeout_turn); break;
-                    case "time_left":
-                        int.TryParse(info, out info_time_left); break;
-                    case "game_type":
-                        int.TryParse(info, out info_game_type); break;
-                    case "rule":
-                        if (int.TryParse(info, out e))
-                        {
-                            info_exact5 = (e & 1) != 0;
-                            info_continuous = (e & 2) != 0;
-                            info_renju = (e & 4) != 0;
-                        }
-                        break;
-                    case "folder":
-                        dataFolder = info; break;
-                    case "evaluate":
-                        if (parse_coord(info, out x, out y)) brain_eval(x, y);
-                        break;
-                        /* unknown info is ignored */
-                }
-                break;
-            case "start":
-                if (!int.TryParse(param, out width) || width < 5)
-                {
-                    width = 0;
-                    Console.WriteLine("ERROR bad START parameter");
-                }
-                else
-                {
-                    height = width;
-                    start();
-                    brain_init();
-                }
-                break;
-            case "rectstart":
-                if (!parse_coord2(param, out width, out height) || width < 5 || height < 5)
-                {
-                    width = height = 0;
-                    Console.WriteLine("ERROR bad RECTSTART parameters");
-                }
-                else
-                {
-                    start();
-                    brain_init();
-                }
-                break;
-            case "restart":
-                start();
-                brain_restart();
-                break;
-            case "turn":
-                start();
-                if (!parse_coord(param, out x, out y))
-                {
-                    Console.WriteLine("ERROR bad coordinates");
-                }
-                else
-                {
-                    brain_opponents(x, y);
-                    turn();
-                }
-                break;
-            case "play":
-                start();
-                if (!parse_coord(param, out x, out y))
-                {
-                    Console.WriteLine("ERROR bad coordinates");
-                }
-                else
-                {
-                    do_mymove(x, y);
-                }
-                break;
-            case "begin":
-                start();
-                turn();
-                break;
-            case "about":
-                Console.WriteLine(brain_about);
-                break;
-            case "end":
-                stop();
-                brain_end();
-                Environment.Exit(0);
-                break;
-            case "board":
-                start();
-                for (; ; ) /* fill the whole board */
-                {
-                    get_line();
-                    parse_3int_chk(cmd, out x, out y, out who);
-                    Console.WriteLine("DEBUG x: {0} y: {1} who: {2}", x, y, who);
-                    if (who == 1) brain_my(x, y);
-                    else if (who == 2) brain_opponents(x, y);
-                    else if (who == 3) brain_block(x, y);
-                    else
-                    {
-                        if (!cmd.Equals("done", StringComparison.InvariantCultureIgnoreCase))
-                            Console.WriteLine("ERROR x,y,who or DONE expected after BOARD");
-                        break;
-                    }
-                }
-                turn();
-                break;
-            case "takeback":
-                start();
-                string t = "ERROR bad coordinates";
-                if (parse_coord(param, out x, out y))
-                {
-                    e = brain_takeback(x, y);
-                    if (e == 0) t = "OK";
-                    else if (e == 1) t = "UNKNOWN";
-                }
-                Console.WriteLine(t);
-                break;
-            default:
-                Console.WriteLine("UNKNOWN command");
-                break;
-        }
-    }
-
-
     /** main function for AI console application  */
     public void main()
     {
+        cmdHandler = new CommandHandler();
         try
         {
             int dummy = Console.WindowHeight;
@@ -289,7 +119,7 @@ abstract class GomocupInterface
         for (; ; )
         {
             get_line();
-            do_command();
+            cmdHandler.DoCommand();
         }
     }
 

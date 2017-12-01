@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandHandler.cs" />
     <Compile Include="Example.cs" />
     <Compile Include="PisqPipe.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
