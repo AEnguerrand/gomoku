@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public class Point
 {
@@ -17,7 +18,7 @@ class GomocupEngine : GomocupInterface
 {
     const int MAX_BOARD = 100;
     List<List<char>> board = new List<List<char>>();
-    List<List<char>> scoreBoard = new List<List<char>>();
+    List<List<int>> scoreBoard = new List<List<int>>();
     Random rand = new Random();
 
     public override string brain_about
@@ -50,9 +51,9 @@ class GomocupEngine : GomocupInterface
 
         for (int i = 0; i < height; i++)
         {
-            scoreBoard.Add(new List<char>());
+            scoreBoard.Add(new List<int>());
             for (int j = 0; j < width; j++)
-                scoreBoard[i].Add('0');
+                scoreBoard[i].Add(0);
         }
         Console.WriteLine("OK");
     }
@@ -122,41 +123,125 @@ class GomocupEngine : GomocupInterface
         for (int i = 0; i < scoreBoard.Count; ++i)
         {
             for (int j = 0; j < scoreBoard[i].Count; ++j)
-                scoreBoard[i][j] = '0';
+                scoreBoard[i][j] = 0;
         }
     }
 
-    int checkDirection(int posX, int posY, int xDir, int yDir)
+    int checkDirection(int posX, int posY, int xDir, int yDir, int baseScoreMe, int baseScoreOp)
     {
         if (posY < 0 && posY >= board.Count)
             return (0);
-        int scoreMe = 0;
-        int scoreOp = 0;
+        int scoreMe = baseScoreMe;
+        int scoreOp = baseScoreOp;
+        bool stopMe = false;
+        bool stopOp = false;
         int loop = 0;
-        for (int i = posY, j = posX; loop < 5 && i >= 0 && i < board.Count && j >= 0 && j < board[i].Count; i += yDir, j += xDir)
+        for (int i = posY, j = posX; loop < 5 && (!stopMe || !stopOp) && i >= 0 && i < board.Count && j >= 0 && j < board[i].Count; i += yDir, j += xDir)
         {
-            if (board[i][j] == '1')
+            if (board[i][j] == '1' && !stopMe)
+            {
                 scoreMe += 10;
-            else if (board[i][j] == '2')
+                stopOp = true;
+            }
+            else if (board[i][j] == '2' && !stopOp)
+            {
                 scoreOp += 10;
+                stopMe = true;
+            }
             loop += 1;
         }
-        return ((scoreMe >= scoreOp) ? (scoreMe) : (scoreOp));
+        return ((scoreMe > scoreOp) ? (scoreMe) : (scoreOp));
+    }
+
+    int CheckWeightAroundCell(int x, int y, out int baseScoreMe, out int baseScoreOp)
+    {
+        baseScoreMe = 0;
+        baseScoreOp = 0;
+        
+        //E
+        if (x + 1 < board[y].Count && board[y][x + 1] == '1')
+            baseScoreMe += 5;
+        else if (x + 1 < board[y].Count && board[y][x + 1] == '2')
+            baseScoreOp += 5;
+
+        //W
+        if (x - 1 >= 0 && board[y][x - 1] == '1')
+            baseScoreMe += 5;
+        else if (x - 1 >= 0 && board[y][x - 1] == '2')
+            baseScoreOp += 5;
+
+        //S
+        if (y + 1 < board.Count && board[y + 1][x] == '1')
+            baseScoreMe += 5;
+        else if (y + 1 < board.Count && board[y + 1][x] == '2')
+            baseScoreOp += 5;
+
+        //N
+        if (y - 1 >= 0 && board[y - 1][x] == '1')
+            baseScoreMe += 5;
+        else if (y - 1 >= 0 && board[y - 1][x] == '2')
+            baseScoreOp += 5;
+
+        //SE
+        if (y + 1 < board.Count && x + 1 < board[y].Count && board[y + 1][x + 1] == '1')
+            baseScoreMe += 5;
+        else if (y + 1 < board.Count && x + 1 < board[y].Count && board[y + 1][x + 1] == '2')
+            baseScoreOp += 5;
+
+        //NW
+        if (y - 1 >= 0 && x - 1 >= 0 && board[y - 1][x - 1] == '1')
+            baseScoreMe += 5;
+        else if (y - 1 >= 0 && x - 1 >= 0 && board[y - 1][x - 1] == '2')
+            baseScoreOp += 5;
+
+        //NE
+        if (y - 1 >= 0 && x + 1 < board[y].Count && board[y - 1][x + 1] == '1')
+            baseScoreMe += 5;
+        else if (y - 1 >= 0 && x + 1 < board[y].Count && board[y - 1][x + 1] == '2')
+            baseScoreOp += 5;
+
+        //SW
+        if (y + 1 < board.Count && x - 1 >= 0 && board[y + 1][x - 1] == '1')
+            baseScoreMe += 5;
+        else if (y + 1 < board.Count && x - 1 >= 0 && board[y + 1][x - 1] == '2')
+            baseScoreOp += 5;
+
+        return ((baseScoreMe > baseScoreOp) ? (baseScoreMe) : (baseScoreOp));
     }
 
     List<int> checkAllDirections(int x, int y)
     {
         List<int> list = new List<int>();
+        CheckWeightAroundCell(x, y, out int baseScoreMe, out int baseScoreOp);
 
-        // E, W, S, N, SE, NW, SW, NE
-        list.Add(checkDirection(x, y, 1, 0));
-        list.Add(checkDirection(x, y, -1, 0));
-        list.Add(checkDirection(x, y, 0, 1));
-        list.Add(checkDirection(x, y, 0, -1));
-        list.Add(checkDirection(x, y, 1, 1));
-        list.Add(checkDirection(x, y, -1, -1));
-        list.Add(checkDirection(x, y, -1, 1));
-        list.Add(checkDirection(x, y, 1, -1));
+        // E
+        list.Add(checkDirection(x - 1, y, 1, 0, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x, y, 1, 0, baseScoreMe, baseScoreOp));
+        // W
+        list.Add(checkDirection(x + 2, y, -1, 0, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x + 1, y, -1, 0, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x, y, -1, 0, baseScoreMe, baseScoreOp));
+        // S
+        list.Add(checkDirection(x, y - 1, 0, 1, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x, y, 0, 1, baseScoreMe, baseScoreOp));
+        // N
+        list.Add(checkDirection(x, y + 2, 0, -1, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x, y + 1, 0, -1, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x, y, 0, -1, baseScoreMe, baseScoreOp));
+        // SE
+        list.Add(checkDirection(x - 1, y - 1, 1, 1, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x, y, 1, 1, baseScoreMe, baseScoreOp));
+        // NW
+        list.Add(checkDirection(x + 2, y + 2, -1, -1, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x + 2, y + 1, -1, -1, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x, y, -1, -1, baseScoreMe, baseScoreOp));
+        // SW
+        list.Add(checkDirection(x + 1, y - 1, -1, 1, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x, y, -1, 1, baseScoreMe, baseScoreOp));
+        // NE
+        list.Add(checkDirection(x - 2, y + 2, 1, -1, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x - 1, y + 1, 1, -1, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x, y, 1, -1, baseScoreMe, baseScoreOp));
         return (list);
     }
 
@@ -180,8 +265,9 @@ class GomocupEngine : GomocupInterface
                         if (max < weights[k])
                             max = weights[k];
                     }
-                    scoreBoard[i][j] = (char)max;
-                    if ((char)highScore < scoreBoard[i][j])
+                    Console.WriteLine("DEBUG [{0}, {1}] => {2}", j, i, max);
+                    scoreBoard[i][j] = max;
+                    if (highScore < scoreBoard[i][j])
                     {
                         highScore = scoreBoard[i][j];
                         bestPos = new Point((ushort)j, (ushort)i);
