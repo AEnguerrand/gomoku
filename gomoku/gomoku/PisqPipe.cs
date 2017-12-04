@@ -76,7 +76,7 @@ abstract class GomocupInterface
     /** start thinking */
     public void turn()
     {
-        terminate = 0;
+        GomocupEngine.Instance.terminate = 0;
         GomocupEngine.Instance.event2.Reset();
         GomocupEngine.Instance.event1.Set();
     }
@@ -94,7 +94,7 @@ abstract class GomocupInterface
         stop();
         if (GomocupEngine.Instance.width == 0)
         {
-            GomocupEngine.Instance.width = height = 20;
+            GomocupEngine.Instance.width = GomocupEngine.Instance.height = 20;
             brain_init();
         }
     }
@@ -125,6 +125,6 @@ abstract class GomocupInterface
 
     static void Main(string[] args)
     {
-        new GomocupEngine().main();
+        GomocupEngine.Instance.main();
     }
 }

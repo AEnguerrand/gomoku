@@ -76,7 +76,6 @@ namespace gomoku
                     if (parse_coord(info, out int x, out int y))
                         GomocupEngine.Instance.brain_eval(x, y);
                     break;
-                    /* unknown info is ignored */
             }
         }
 
