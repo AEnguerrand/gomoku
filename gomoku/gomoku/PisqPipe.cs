@@ -34,17 +34,18 @@ abstract class GomocupInterface
     abstract public void brain_end();  /* delete temporary files, free resources */
     virtual public void brain_eval(int x, int y) { } /* display evaluation of square [x,y] */
 
-    private CommandHandler cmdHandler;
+    protected CommandHandler cmdHandler;
+    private string cmd;
 
-    public string cmd;
+    public string Cmd { get => cmd; set => cmd = value; }
     private AutoResetEvent event1;
     private ManualResetEvent event2;
 
     /** read a line from STDIN */
     public void get_line()
     {
-        cmd = Console.ReadLine();
-        if (cmd == null)
+        Console.WriteLine("DEBUG getline = " + (GomocupEngine.Instance.Cmd = Console.ReadLine()));
+        if (GomocupEngine.Instance.Cmd == null)
             Environment.Exit(0);
     }
 
@@ -66,9 +67,9 @@ abstract class GomocupInterface
     {
         for (; ; )
         {
-            event1.WaitOne();
+            GomocupEngine.Instance.event1.WaitOne();
             brain_turn();
-            event2.Set();
+            GomocupEngine.Instance.event2.Set();
         }
     }
 
@@ -76,24 +77,24 @@ abstract class GomocupInterface
     public void turn()
     {
         terminate = 0;
-        event2.Reset();
-        event1.Set();
+        GomocupEngine.Instance.event2.Reset();
+        GomocupEngine.Instance.event1.Set();
     }
 
     /** stop thinking */
     public void stop()
     {
-        terminate = 1;
-        event2.WaitOne();
+        GomocupEngine.Instance.terminate = 1;
+        GomocupEngine.Instance.event2.WaitOne();
     }
 
     public void start()
     {
-        start_time = Environment.TickCount;
+        GomocupEngine.Instance.start_time = Environment.TickCount;
         stop();
-        if (width == 0)
+        if (GomocupEngine.Instance.width == 0)
         {
-            width = height = 20;
+            GomocupEngine.Instance.width = height = 20;
             brain_init();
         }
     }
@@ -101,7 +102,6 @@ abstract class GomocupInterface
     /** main function for AI console application  */
     public void main()
     {
-        cmdHandler = new CommandHandler();
         try
         {
             int dummy = Console.WindowHeight;
@@ -113,9 +113,9 @@ abstract class GomocupInterface
             //OK, process started from the Piskvork manager
         }
 
-        event1 = new AutoResetEvent(false);
+        GomocupEngine.Instance.event1 = new AutoResetEvent(false);
         new Thread(threadLoop).Start();
-        event2 = new ManualResetEvent(true);
+        GomocupEngine.Instance.event2 = new ManualResetEvent(true);
         for (; ; )
         {
             get_line();

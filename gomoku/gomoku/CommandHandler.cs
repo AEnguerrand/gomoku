@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System;
 
 namespace gomoku
 {
@@ -35,17 +32,13 @@ namespace gomoku
 
         private static string get_cmd_param(string command, out string param)
         {
-            Console.WriteLine("DEBUG a");
             param = "";
-            Console.WriteLine("DEBUG b");
             int pos = command.IndexOf(' ');
-            Console.WriteLine("DEBUG c");
             if (pos >= 0)
             {
                 param = command.Substring(pos + 1).TrimStart(' ');
                 command = command.Substring(0, pos);
             }
-            Console.WriteLine("DEBUG d");
             return command.ToLower();
         }
 
@@ -170,10 +163,10 @@ namespace gomoku
         private void ParseBoard(string param)
         {
             GomocupEngine.Instance.start();
-            for (; ; ) /* fill the whole board */
+            for (; ; )
             {
                 GomocupEngine.Instance.get_line();
-                parse_3int_chk(GomocupEngine.Instance.cmd, out int x, out int y, out int who);
+                parse_3int_chk(GomocupEngine.Instance.Cmd, out int x, out int y, out int who);
                 Console.WriteLine("DEBUG x: {0} y: {1} who: {2}", x, y, who);
                 if (who == 1)
                     GomocupEngine.Instance.brain_my(x, y);
@@ -183,7 +176,7 @@ namespace gomoku
                     GomocupEngine.Instance.brain_block(x, y);
                 else
                 {
-                    if (!GomocupEngine.Instance.cmd.Equals("done", StringComparison.InvariantCultureIgnoreCase))
+                    if (!GomocupEngine.Instance.Cmd.Equals("done", StringComparison.InvariantCultureIgnoreCase))
                         Console.WriteLine("ERROR x,y,who or DONE expected after BOARD");
                     break;
                 }
@@ -209,8 +202,6 @@ namespace gomoku
         /** do command cmd */
         public void DoCommand()
         {
-
-            Console.WriteLine("DEBUG In");
             var CommandFunc = new Dictionary<string, ParamFunc>
             {
                 { "info", ParseInfo },
@@ -225,24 +216,17 @@ namespace gomoku
                 { "board", ParseBoard },
                 { "takeback", ParseTakeback }
             };
-            Console.WriteLine("DEBUG 1");
-
-            string command = get_cmd_param(GomocupEngine.Instance.cmd, out string param);
-            Console.WriteLine("DEBUG 2");
+            string command = get_cmd_param(GomocupEngine.Instance.Cmd, out string param);
 
             foreach (var it in CommandFunc)
             {
-                Console.WriteLine("DEBUG - " + it.Key);
 
                 if (it.Key == command)
                 {
-                    Console.WriteLine("DEBUG key = " + it.Key);
                     it.Value(param);
                     return;
                 }
             }
-            Console.WriteLine("DEBUG 3");
-
             Console.WriteLine("UNKNOWN command");
         }
     }

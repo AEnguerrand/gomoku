@@ -1,5 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using gomoku;
+using System;
 
 public class Point
 {
@@ -16,11 +17,11 @@ public class Point
 class GomocupEngine : GomocupInterface
 {
     const int MAX_BOARD = 100;
-    List<List<char>> board = new List<List<char>>();
-    List<List<char>> scoreBoard = new List<List<char>>();
+    List<List<char>> board;
+    List<List<char>> scoreBoard;
     Random rand = new Random();
 
-    private static GomocupEngine instance;
+    private static GomocupEngine instance = null;
 
     public static GomocupEngine Instance
     {
@@ -30,6 +31,14 @@ class GomocupEngine : GomocupInterface
                 instance = new GomocupEngine();
             return (instance);
         }
+    }
+
+    public GomocupEngine()
+    {
+        this.board = new List<List<char>>();
+        this.scoreBoard = new List<List<char>>();
+        this.cmdHandler = new CommandHandler();
+        this.Cmd = "";
     }
 
     public override string brain_about
