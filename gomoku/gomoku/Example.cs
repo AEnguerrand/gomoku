@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -136,77 +137,100 @@ class GomocupEngine : GomocupInterface
         bool stopMe = false;
         bool stopOp = false;
         int loop = 0;
+        short foundMe = 0;
+        short foundOp = 0;
         for (int i = posY, j = posX; loop < 5 && (!stopMe || !stopOp) && i >= 0 && i < board.Count && j >= 0 && j < board[i].Count; i += yDir, j += xDir)
         {
-            if (board[i][j] == '1' && !stopMe)
+            if (board[i][j] == '0' && loop == 4)
             {
-                scoreMe += 10;
-                stopOp = true;
+                if (!stopMe && foundMe == 3)
+                    scoreMe += 20;
+                if (!stopOp && foundOp == 3)
+                    scoreOp += 20;
             }
-            else if (board[i][j] == '2' && !stopOp)
+            else if (board[i][j] == '1')
             {
-                scoreOp += 10;
-                stopMe = true;
+                if (!stopMe)
+                {
+                    foundMe += 1;
+                    scoreMe += 10 * foundMe;
+                    stopOp = true;
+                }
+                scoreOp -= 20;
+            }
+            else if (board[i][j] == '2')
+            {
+                if (!stopOp)
+                {
+                    foundOp += 1;
+                    scoreOp += 10 * foundOp;
+                    stopMe = true;
+                }
+                scoreMe -= 20;
             }
             loop += 1;
+            if (i + yDir < 0 || i + yDir >= board.Count || j + xDir < 0 && j + xDir >= board[i].Count)
+                return (0);
         }
-        return ((scoreMe > scoreOp) ? (scoreMe) : (scoreOp));
+        if (foundMe == 4)
+            return (scoreMe * 200);
+        else if (foundOp == 4)
+            return (scoreOp * 100);
+        return ((scoreMe >= scoreOp) ? (scoreMe) : (scoreOp));
     }
 
-    int CheckWeightAroundCell(int x, int y, out int baseScoreMe, out int baseScoreOp)
+    void CheckWeightAroundCell(int x, int y, out int baseScoreMe, out int baseScoreOp)
     {
         baseScoreMe = 0;
         baseScoreOp = 0;
         
         //E
         if (x + 1 < board[y].Count && board[y][x + 1] == '1')
-            baseScoreMe += 5;
+            baseScoreMe += 1;
         else if (x + 1 < board[y].Count && board[y][x + 1] == '2')
-            baseScoreOp += 5;
+            baseScoreOp += 1;
 
         //W
         if (x - 1 >= 0 && board[y][x - 1] == '1')
-            baseScoreMe += 5;
+            baseScoreMe += 1;
         else if (x - 1 >= 0 && board[y][x - 1] == '2')
-            baseScoreOp += 5;
+            baseScoreOp += 1;
 
         //S
         if (y + 1 < board.Count && board[y + 1][x] == '1')
-            baseScoreMe += 5;
+            baseScoreMe += 1;
         else if (y + 1 < board.Count && board[y + 1][x] == '2')
-            baseScoreOp += 5;
+            baseScoreOp += 1;
 
         //N
         if (y - 1 >= 0 && board[y - 1][x] == '1')
-            baseScoreMe += 5;
+            baseScoreMe += 1;
         else if (y - 1 >= 0 && board[y - 1][x] == '2')
-            baseScoreOp += 5;
+            baseScoreOp += 1;
 
         //SE
         if (y + 1 < board.Count && x + 1 < board[y].Count && board[y + 1][x + 1] == '1')
-            baseScoreMe += 5;
+            baseScoreMe += 1;
         else if (y + 1 < board.Count && x + 1 < board[y].Count && board[y + 1][x + 1] == '2')
-            baseScoreOp += 5;
+            baseScoreOp += 1;
 
         //NW
         if (y - 1 >= 0 && x - 1 >= 0 && board[y - 1][x - 1] == '1')
-            baseScoreMe += 5;
+            baseScoreMe += 1;
         else if (y - 1 >= 0 && x - 1 >= 0 && board[y - 1][x - 1] == '2')
-            baseScoreOp += 5;
+            baseScoreOp += 1;
 
         //NE
         if (y - 1 >= 0 && x + 1 < board[y].Count && board[y - 1][x + 1] == '1')
-            baseScoreMe += 5;
+            baseScoreMe += 1;
         else if (y - 1 >= 0 && x + 1 < board[y].Count && board[y - 1][x + 1] == '2')
-            baseScoreOp += 5;
+            baseScoreOp += 1;
 
         //SW
         if (y + 1 < board.Count && x - 1 >= 0 && board[y + 1][x - 1] == '1')
-            baseScoreMe += 5;
+            baseScoreMe += 1;
         else if (y + 1 < board.Count && x - 1 >= 0 && board[y + 1][x - 1] == '2')
-            baseScoreOp += 5;
-
-        return ((baseScoreMe > baseScoreOp) ? (baseScoreMe) : (baseScoreOp));
+            baseScoreOp += 1;
     }
 
     List<int> checkAllDirections(int x, int y)
@@ -233,7 +257,7 @@ class GomocupEngine : GomocupInterface
         list.Add(checkDirection(x, y, 1, 1, baseScoreMe, baseScoreOp));
         // NW
         list.Add(checkDirection(x + 2, y + 2, -1, -1, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x + 2, y + 1, -1, -1, baseScoreMe, baseScoreOp));
+        list.Add(checkDirection(x + 1, y + 1, -1, -1, baseScoreMe, baseScoreOp));
         list.Add(checkDirection(x, y, -1, -1, baseScoreMe, baseScoreOp));
         // SW
         list.Add(checkDirection(x + 1, y - 1, -1, 1, baseScoreMe, baseScoreOp));
@@ -242,6 +266,8 @@ class GomocupEngine : GomocupInterface
         list.Add(checkDirection(x - 2, y + 2, 1, -1, baseScoreMe, baseScoreOp));
         list.Add(checkDirection(x - 1, y + 1, 1, -1, baseScoreMe, baseScoreOp));
         list.Add(checkDirection(x, y, 1, -1, baseScoreMe, baseScoreOp));
+        Console.WriteLine("DEBUG [{0}, {1}] => E-1:{2}, E:{3}, W+2:{4}, W+1:{5}, W:{6}, S-1:{7}, S:{8}, N+2:{9}, N-1:{10}, N:{11}, SE1:{12}, SE:{13}, NW2:{14}, NW1:{15}, NW:{16}, SW1:{17}, SW:{18}, NE2:{19}, NE1:{20}, NE:{21}",
+                          x, y, list[0], list[1], list[2], list[3], list[4], list[5], list[6], list[0], list[7], list[8], list[9], list[10], list[11], list[12], list[13], list[14], list[15], list[16], list[17], list[18]);
         return (list);
     }
 
