@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -193,8 +192,8 @@ class GomocupEngine : GomocupInterface
             CheckDirection(x, y, -1, 1, '2')
         };
         Console.WriteLine("DEBUG [{0}, {1}]", x, y);
-        Console.WriteLine("DEBUG weightsMe: {0}", JsonConvert.SerializeObject(weightsMe));
-        Console.WriteLine("DEBUG weightsOp: {0}", JsonConvert.SerializeObject(weightsOp));
+        //Console.WriteLine("DEBUG weightsMe: {0}", JsonConvert.SerializeObject(weightsMe));
+        //Console.WriteLine("DEBUG weightsOp: {0}", JsonConvert.SerializeObject(weightsOp));
         int sumMe = weightsMe.Sum();
         int sumOp = weightsOp.Sum();
         Console.WriteLine("DEBUG sumMe: {0} | sumOp {1}", sumMe, sumOp);
@@ -202,9 +201,206 @@ class GomocupEngine : GomocupInterface
         return ((sumMe >= sumOp) ? (sumMe) : (sumOp));
     }
 
-    Point FindBestMove()
+
+
+
+
+
+    char ChangeIntoPlayerChar(char c)
     {
-        int highScore = 0;
+        if (c == '0')
+            return ('H');
+        else if (c == '1' || c == '2')
+            return (c);
+        return ('H');
+    }
+
+    bool WinningBoard(List<List<char>> board)
+    {
+        string diagLR = "", diagRL = "", ver = "", hor = "";
+
+        //Diag LeftRight
+        for (int i = 0; i < board.Count; i++)
+        {
+            diagLR = "";
+            for (int j = 0, tmpI = i; j <= i; j++, tmpI--)
+                diagLR += ChangeIntoPlayerChar(board[tmpI][j]);
+            if (EvalString(diagLR.Replace('1', 'X')) == 41000000 || EvalString(diagLR.Replace('2', 'X')) == 41000000)
+                return (true);
+        }
+        for (int j = 1; j < board[0].Count; j++)
+        {
+            diagLR = "";
+            for (int i = board.Count - 1, tmpJ = j; tmpJ < board[i].Count; i--, tmpJ++)
+                diagLR += ChangeIntoPlayerChar(board[i][tmpJ]);
+            if (EvalString(diagLR.Replace('1', 'X')) == 41000000 || EvalString(diagLR.Replace('2', 'X')) == 41000000)
+                return (true);
+        }
+
+        //Diag RightLeft
+        for (int i = 0; i < board.Count; i++)
+        {
+            diagRL = "";
+            for (int j = board[i].Count - 1, tmpI = i; tmpI >= 0; j--, tmpI--)
+                diagRL += ChangeIntoPlayerChar(board[tmpI][j]);
+            if (EvalString(diagRL.Replace('1', 'X')) == 41000000 || EvalString(diagRL.Replace('2', 'X')) == 41000000)
+                return (true);
+        }
+        for (int j = board[0].Count - 2; j >= 0; j--)
+        {
+            diagRL = "";
+            for (int i = board.Count - 1, tmpJ = j; tmpJ >= 0; i--, tmpJ--)
+                diagRL += ChangeIntoPlayerChar(board[i][tmpJ]);
+            if (EvalString(diagRL.Replace('1', 'X')) == 41000000 || EvalString(diagRL.Replace('2', 'X')) == 41000000)
+                return (true);
+        }
+
+        //HorizontalAndVertical
+        for (int i = 0; i < board.Count; i++)
+        {
+            ver = "";
+            hor = "";
+            for (int j = 0; j < board[i].Count; j++)
+            {
+                hor += ChangeIntoPlayerChar(board[i][j]);
+                ver += ChangeIntoPlayerChar(board[j][i]);
+            }
+            if (EvalString(hor.Replace('1', 'X')) == 41000000 || EvalString(hor.Replace('2', 'X')) == 41000000 ||
+                EvalString(ver.Replace('1', 'X')) == 41000000 || EvalString(ver.Replace('2', 'X')) == 41000000)
+                return (true);
+        }
+        return (false);
+    }
+
+    int EvalString(string s)
+    {
+        //Console.WriteLine("DEBUG EVALSTRING: [{0}]", s);
+        if (s.Contains("XXXXX"))
+            return (41000000);
+        else if (s.Contains("HXXXXH"))
+            return (10100000);
+        else if (s.Contains("XXXXH") || s.Contains("HXXXX") || s.Contains("HXXXHH") || s.Contains("HHXXXH") || s.Contains("HXHXXH") ||
+            s.Contains("HXXHXH") || s.Contains("HXXXHX") || s.Contains("XHXXXH"))
+            return (2510000);
+        else if (s.Contains("XXXHH") || s.Contains("HHXXX") || s.Contains("XXHXH") || s.Contains("HXHXX") || s.Contains("XHXXH") ||
+                 s.Contains("HXXHX") || s.Contains("XXHHX") || s.Contains("XHHXX") || s.Contains("XHXHX"))
+            return (625100);
+        else if (s.Contains("XX"))
+            return (156260);
+        return (0);
+    }
+
+    int Eval(List<List<char>> board)
+    {
+        string diagLR = "", diagRL = "", ver = "", hor = "";
+        int evalMe = 0, evalOp = 0;
+
+        //Diag LeftRight
+        for (int i = 0; i < board.Count; i++)
+        {
+            diagLR = "";
+            for (int j = 0, tmpI = i; j <= i; j++, tmpI--)
+                diagLR += ChangeIntoPlayerChar(board[tmpI][j]);
+            evalMe += EvalString(diagLR.Replace('1', 'X'));
+            evalOp += EvalString(diagLR.Replace('2', 'X'));
+        }
+        for (int j = 1; j < board[0].Count; j++)
+        {
+            diagLR = "";
+            for (int i = board.Count - 1, tmpJ = j; tmpJ < board[i].Count; i--, tmpJ++)
+                diagLR += ChangeIntoPlayerChar(board[i][tmpJ]);
+            evalMe += EvalString(diagLR.Replace('1', 'X'));
+            evalOp += EvalString(diagLR.Replace('2', 'X'));
+        }
+
+        //Diag RightLeft
+        for (int i = 0; i < board.Count; i++)
+        {
+            diagRL = "";
+            for (int j = board[i].Count - 1, tmpI = i; tmpI >= 0; j--, tmpI--)
+                diagRL += ChangeIntoPlayerChar(board[tmpI][j]);
+            evalMe += EvalString(diagRL.Replace('1', 'X'));
+            evalOp += EvalString(diagRL.Replace('2', 'X'));
+        }
+        for (int j = board[0].Count - 2; j >= 0; j--)
+        {
+            diagRL = "";
+            for (int i = board.Count - 1, tmpJ = j; tmpJ >= 0; i--, tmpJ--)
+                diagRL += ChangeIntoPlayerChar(board[i][tmpJ]);
+            evalMe += EvalString(diagRL.Replace('1', 'X'));
+            evalOp += EvalString(diagRL.Replace('2', 'X'));
+        }
+
+        //HorizontalAndVertical
+        for (int i = 0; i < board.Count; i++)
+        {
+            ver = "";
+            hor = "";
+            for (int j = 0; j < board[i].Count; j++)
+            {
+                hor += ChangeIntoPlayerChar(board[i][j]);
+                ver += ChangeIntoPlayerChar(board[j][i]);
+            }
+            evalMe += EvalString(hor.Replace('1', 'X')) + EvalString(ver.Replace('1', 'X'));
+            evalOp += EvalString(hor.Replace('2', 'X')) + EvalString(ver.Replace('2', 'X'));
+        }
+        //Console.WriteLine("DEBUG [ME]: {0} | [OP]: {1}", evalMe, evalOp);
+        return (evalMe - evalOp);
+    }
+
+    int Max(List<List<char>> board, int depth)
+    {
+        if (depth == 0 || WinningBoard(board))
+            return Eval(board);
+
+        int max = -1000000000;
+        int tmp;
+
+        for (int i = 0; i < board.Count; i++)
+        {
+            for (int j = 0; j < board[i].Count; j++)
+            {
+                if (board[i][j] == '0')
+                {
+                    board[i][j] = '2';
+                    tmp = Min(board, depth - 1);
+                    if (tmp > max)
+                        max = tmp;
+                    board[i][j] = '0';
+                }
+            }
+        }
+        return (max);
+    }
+
+    int Min(List<List<char>> board, int depth)
+    {
+        if (depth == 0 || WinningBoard(board))
+            return Eval(board);
+        int min = 1000000000;
+        int tmp;
+
+        for (int i = 0; i < board.Count; i++)
+        {
+            for (int j = 0; j < board[i].Count; j++)
+            {
+                if (board[i][j] == '0')
+                {
+                    board[i][j] = '1';
+                    tmp = Max(board, depth - 1);
+                    if (tmp < min)
+                        min = tmp;
+                    board[i][j] = '0';
+                }
+            }
+        }
+        return (min);
+    }
+
+    Point FindBestMove(int depth)
+    {
+        int highScore = -1000000000;
+        int tmp;
         Point bestPos = new Point((ushort)(height / 2), (ushort)(width / 2));
 
         for (int i = 0; i < board.Count; ++i)
@@ -213,12 +409,16 @@ class GomocupEngine : GomocupInterface
             {
                 if (board[i][j] == '0')
                 {
-                    scoreBoard[i][j] = CheckAllDirections(j, i);
-                    if (highScore < scoreBoard[i][j])
+                    board[i][j] = '1';
+                    tmp = Min(board, depth - 1);
+                    Console.WriteLine("DEBUG [{0}, {1}]: WEIGHT FOUND => {2}", j, i, tmp);
+                    Console.WriteLine("DEBUG ---------------------------------");
+                    if (tmp > highScore)
                     {
-                        highScore = scoreBoard[i][j];
+                        highScore = tmp;
                         bestPos = new Point((ushort)j, (ushort)i);
                     }
+                    board[i][j] = '0';
                 }
             }
         }
@@ -240,7 +440,7 @@ class GomocupEngine : GomocupInterface
         }
         ResetScoreBoard();
         Console.WriteLine("DEBUG avant findbestmove");
-        Point pos = FindBestMove();
+        Point pos = FindBestMove(1);
         Console.WriteLine("DEBUG apres findbestmove");
         Console.WriteLine("DEBUG [{0}, {1}]", pos.X, pos.Y);
         do_mymove(pos.X, pos.Y);
