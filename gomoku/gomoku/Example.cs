@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -160,13 +159,13 @@ class GomocupEngine : GomocupInterface
                     blockCursor2 = true;
             }
         }
-        Console.WriteLine("DEBUG DIR: [{0}, {1}] | PLAYER: [{2}] | STRING: [{3}]", xDir, yDir, player, s);
+        //Console.WriteLine("DEBUG DIR: [{0}, {1}] | PLAYER: [{2}] | STRING: [{3}]", xDir, yDir, player, s);
         if (s.Contains("XXXXX"))
             return (41000000);
         else if (s.Contains("HXXXXH"))
             return (10100000);
         else if (s.Contains("XXXXH") || s.Contains("HXXXX") || s.Contains("HXXXHH") || s.Contains("HHXXXH") || s.Contains("HXHXXH") ||
-            s.Contains("HXXHXH") || s.Contains("HXXXHX") || s.Contains("XHXXXH"))
+            s.Contains("HXXHXH") || s.Contains("HXXXHX") || s.Contains("XHXXXH") || s.Contains("XXXHX") || s.Contains("XHXXX"))
             return (2510000);
         else if (s.Contains("XXXHH") || s.Contains("HHXXX") || s.Contains("XXHXH") || s.Contains("HXHXX") || s.Contains("XHXXH") ||
                  s.Contains("HXXHX") || s.Contains("XXHHX") || s.Contains("XHHXX") || s.Contains("XHXHX"))
@@ -192,13 +191,13 @@ class GomocupEngine : GomocupInterface
             CheckDirection(x, y, 1, 1, '2'),
             CheckDirection(x, y, -1, 1, '2')
         };
-        Console.WriteLine("DEBUG [{0}, {1}]", x, y);
-        Console.WriteLine("DEBUG weightsMe: {0}", JsonConvert.SerializeObject(weightsMe));
-        Console.WriteLine("DEBUG weightsOp: {0}", JsonConvert.SerializeObject(weightsOp));
+        //Console.WriteLine("DEBUG [{0}, {1}]", x, y);
+        //Console.WriteLine("DEBUG weightsMe: {0}", JsonConvert.SerializeObject(weightsMe));
+        //Console.WriteLine("DEBUG weightsOp: {0}", JsonConvert.SerializeObject(weightsOp));
         int sumMe = weightsMe.Sum();
         int sumOp = weightsOp.Sum();
-        Console.WriteLine("DEBUG sumMe: {0} | sumOp {1}", sumMe, sumOp);
-        Console.WriteLine("DEBUG ------------------------------");
+        //Console.WriteLine("DEBUG sumMe: {0} | sumOp {1}", sumMe, sumOp);
+        //Console.WriteLine("DEBUG ------------------------------");
         return ((sumMe >= sumOp) ? (sumMe) : (sumOp));
     }
 
@@ -227,8 +226,8 @@ class GomocupEngine : GomocupInterface
 
     public override void brain_turn()
     {
-        Console.WriteLine("DEBUG TURN");
-        Console.WriteLine("DEBUG PRINT MAP BEFORE");
+        //Console.WriteLine("DEBUG TURN");
+        //Console.WriteLine("DEBUG PRINT MAP BEFORE");
         for (int i = 0; i < board.Count; i++)
         {
             string s = "";
@@ -236,15 +235,15 @@ class GomocupEngine : GomocupInterface
             {
                 s += board[i][j];
             }
-            Console.WriteLine("DEBUG {0}", s);
+            //Console.WriteLine("DEBUG {0}", s);
         }
         ResetScoreBoard();
-        Console.WriteLine("DEBUG avant findbestmove");
+        //Console.WriteLine("DEBUG avant findbestmove");
         Point pos = FindBestMove();
-        Console.WriteLine("DEBUG apres findbestmove");
-        Console.WriteLine("DEBUG [{0}, {1}]", pos.X, pos.Y);
+        //Console.WriteLine("DEBUG apres findbestmove");
+        //Console.WriteLine("DEBUG [{0}, {1}]", pos.X, pos.Y);
         do_mymove(pos.X, pos.Y);
-        Console.WriteLine("DEBUG PRINT MAP AFTER");
+        //Console.WriteLine("DEBUG PRINT MAP AFTER");
         for (int i = 0; i < board.Count; i++)
         {
             string s = "";
@@ -252,7 +251,7 @@ class GomocupEngine : GomocupInterface
             {
                 s += board[i][j];
             }
-            Console.WriteLine("DEBUG {0}", s);
+            //Console.WriteLine("DEBUG {0}", s);
         }
     }
 
