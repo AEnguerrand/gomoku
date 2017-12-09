@@ -14,6 +14,20 @@ public class Point
     }
 }
 
+public class Move
+{
+    public Point point;
+    public int value;
+    public bool eval;
+
+    public Move()
+    {
+        value = 0;
+        eval = false;
+        point = new Point(0, 0);
+    }
+}
+
 class GomocupEngine : GomocupInterface
 {
     const int MAX_BOARD = 100;
@@ -316,7 +330,7 @@ class GomocupEngine : GomocupInterface
         return (0);
     }
 
-    int Eval(List<List<char>> board)
+    Move Eval(List<List<char>> board)
     {
         string diagLR = "", diagRL = "", ver = "", hor = "";
         int evalMe = 0, evalOp = 0;
@@ -371,16 +385,21 @@ class GomocupEngine : GomocupInterface
             evalOp += EvalString(hor.Replace('2', 'X')) + EvalString(ver.Replace('2', 'X'));
         }
         //Console.WriteLine("DEBUG [ME]: {0} | [OP]: {1}", evalMe, evalOp);
-        return (evalMe - evalOp);
+        Move output = new Move();
+        output.eval = true;
+        output.value = evalMe - evalOp;
+        return (output);
     }
 
-    int Max(List<List<char>> board, int depth)
+    Move Max(List<List<char>> board, int depth, int alpha, int beta)
     {
         if (depth == 0 || WinningBoard(board))
             return Eval(board);
 
-        int max = -1000000000;
-        int tmp;
+        Move Max = new Move();
+        Max.point.X = Max.point.Y = 0;
+        Max.value = -1000000000;
+        Move tmp = new Move();
 
         for (int i = 0; i < board.Count; i++)
         {
@@ -389,22 +408,35 @@ class GomocupEngine : GomocupInterface
                 if (board[i][j] == '0')
                 {
                     board[i][j] = '1';
-                    tmp = Min(board, depth - 1);
-                    if (tmp > max)
-                        max = tmp;
+                    tmp = Min(board, depth - 1, alpha, beta);
+                    if (tmp.value > Max.value)
+                    {
+                        Max.value = tmp.value;
+                        Max.point.X = (ushort)j;
+                        Max.point.Y = (ushort)i;
+                        Console.WriteLine("DEBUG ## max = " + Max.value);
+                    }
+                    if (Max.value >= beta)
+                    {
+                        Console.WriteLine("DEBUG exit because elegage ! (max)");
+                        return (Max);
+                    }
+                    if (Max.value > alpha)
+                        alpha = Max.value;
                     board[i][j] = '0';
                 }
             }
         }
-        return (max);
+        return (Max);
     }
 
-    int Min(List<List<char>> board, int depth)
+    Move Min(List<List<char>> board, int depth, int alpha, int beta)
     {
         if (depth == 0 || WinningBoard(board))
             return Eval(board);
-        int min = 1000000000;
-        int tmp;
+        Move Min = new Move();
+        Min.value = 1000000000;
+        Move tmp = new Move();
 
         for (int i = 0; i < board.Count; i++)
         {
@@ -413,30 +445,48 @@ class GomocupEngine : GomocupInterface
                 if (board[i][j] == '0')
                 {
                     board[i][j] = '2';
-                    tmp = Max(board, depth - 1);
-                    if (tmp < min)
-                        min = tmp;
+                    tmp = Max(board, depth - 1, alpha, beta);
+                    if (tmp.value < Min.value)
+                    {
+                        Min.value = tmp.value;
+                        Min.point.X = (ushort)j;
+                        Min.point.Y = (ushort)i;
+                        Console.WriteLine("DEBUG ## min = " + Min.value);
+                    }
+                    if (Min.value <= alpha)
+                    {
+                        Console.WriteLine("DEBUG exit because elegage ! (min)");
+                        return (Min);
+                    }
+                    if (Min.value < beta)
+                        beta = Min.value;
                     board[i][j] = '0';
                 }
             }
         }
-        return (min);
+        return (Min);
     }
 
     Point FindBestMove(int depth)
     {
+        int alpha = -1000000000;
+        int beta = 1000000000;
         int highScore = -1000000000;
         int tmp;
-        Point bestPos = new Point((ushort)(height / 2), (ushort)(width / 2));
+        //Point bestPos = new Point((ushort)(height / 2), (ushort)(width / 2));
 
-        for (int i = 0; i < board.Count; ++i)
+        var move = Max(board, depth - 1, alpha, beta);
+
+        Point bestPos = new Point(move.point.X, move.point.Y);
+
+       /* for (int i = 0; i < board.Count; ++i)
         {
             for (int j = 0; j < board[i].Count; ++j)
             {
                 if (board[i][j] == '0')
                 {
                     board[i][j] = '1';
-                    tmp = Min(board, depth - 1);
+                    tmp = Min(board, depth - 1, alpha, beta);
                     Console.WriteLine("DEBUG [{0}, {1}]: WEIGHT FOUND => {2}", j, i, tmp);
                     Console.WriteLine("DEBUG ---------------------------------");
                     if (tmp > highScore)
@@ -447,7 +497,7 @@ class GomocupEngine : GomocupInterface
                     board[i][j] = '0';
                 }
             }
-        }
+        }*/
         return (bestPos);
     }
 
