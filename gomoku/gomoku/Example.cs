@@ -175,7 +175,7 @@ class GomocupEngine : GomocupInterface
         return (0);
     }
 
-    int CheckAllDirections(int x, int y)
+    int _CheckAllDirections(int x, int y)
     {
         List<int> weightsMe = new List<int>
         {
@@ -200,6 +200,32 @@ class GomocupEngine : GomocupInterface
         Console.WriteLine("DEBUG ------------------------------");
         return ((sumMe >= sumOp) ? (sumMe) : (sumOp));
     }
+
+    //int CheckAllDirections(List<List<char>> board)
+    //{
+    //    List<int> weightsMe = new List<int>
+    //    {
+    //        CheckDirection(x, y, 0, 1, '1'),
+    //        CheckDirection(x, y, 1, 0, '1'),
+    //        CheckDirection(x, y, 1, 1, '1'),
+    //        CheckDirection(x, y, -1, 1, '1')
+    //    };
+    //    List<int> weightsOp = new List<int>
+    //    {
+    //        CheckDirection(x, y, 0, 1, '2'),
+    //        CheckDirection(x, y, 1, 0, '2'),
+    //        CheckDirection(x, y, 1, 1, '2'),
+    //        CheckDirection(x, y, -1, 1, '2')
+    //    };
+    //    Console.WriteLine("DEBUG [{0}, {1}]", x, y);
+    //    //Console.WriteLine("DEBUG weightsMe: {0}", JsonConvert.SerializeObject(weightsMe));
+    //    //Console.WriteLine("DEBUG weightsOp: {0}", JsonConvert.SerializeObject(weightsOp));
+    //    int sumMe = weightsMe.Sum();
+    //    int sumOp = weightsOp.Sum();
+    //    Console.WriteLine("DEBUG sumMe: {0} | sumOp {1}", sumMe, sumOp);
+    //    Console.WriteLine("DEBUG ------------------------------");
+    //    return ((sumMe >= sumOp) ? (sumMe) : (sumOp));
+    //}
 
 
 
@@ -280,10 +306,10 @@ class GomocupEngine : GomocupInterface
         else if (s.Contains("HXXXXH"))
             return (10100000);
         else if (s.Contains("XXXXH") || s.Contains("HXXXX") || s.Contains("HXXXHH") || s.Contains("HHXXXH") || s.Contains("HXHXXH") ||
-            s.Contains("HXXHXH") || s.Contains("HXXXHX") || s.Contains("XHXXXH"))
+            s.Contains("HXXHXH") || s.Contains("XXXHX") || s.Contains("XHXXX") || s.Contains("XXHXX"))
             return (2510000);
         else if (s.Contains("XXXHH") || s.Contains("HHXXX") || s.Contains("XXHXH") || s.Contains("HXHXX") || s.Contains("XHXXH") ||
-                 s.Contains("HXXHX") || s.Contains("XXHHX") || s.Contains("XHHXX") || s.Contains("XHXHX"))
+                 s.Contains("HXXHX") || s.Contains("XXHHX") || s.Contains("XHHXX") || s.Contains("XHXHX") || s.Contains("HXXXH"))
             return (625100);
         else if (s.Contains("XX"))
             return (156260);
@@ -362,7 +388,7 @@ class GomocupEngine : GomocupInterface
             {
                 if (board[i][j] == '0')
                 {
-                    board[i][j] = '2';
+                    board[i][j] = '1';
                     tmp = Min(board, depth - 1);
                     if (tmp > max)
                         max = tmp;
@@ -386,7 +412,7 @@ class GomocupEngine : GomocupInterface
             {
                 if (board[i][j] == '0')
                 {
-                    board[i][j] = '1';
+                    board[i][j] = '2';
                     tmp = Max(board, depth - 1);
                     if (tmp < min)
                         min = tmp;
@@ -440,7 +466,7 @@ class GomocupEngine : GomocupInterface
         }
         ResetScoreBoard();
         Console.WriteLine("DEBUG avant findbestmove");
-        Point pos = FindBestMove(1);
+        Point pos = FindBestMove(2);
         Console.WriteLine("DEBUG apres findbestmove");
         Console.WriteLine("DEBUG [{0}, {1}]", pos.X, pos.Y);
         do_mymove(pos.X, pos.Y);
