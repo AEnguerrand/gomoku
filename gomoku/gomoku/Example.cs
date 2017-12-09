@@ -388,6 +388,8 @@ class GomocupEngine : GomocupInterface
         Move output = new Move();
         output.eval = true;
         output.value = evalMe - evalOp;
+        output.point.X = (ushort)(height / 2);
+        output.point.Y = (ushort)(width / 2);
         return (output);
     }
 
@@ -419,6 +421,7 @@ class GomocupEngine : GomocupInterface
                     if (Max.value >= beta)
                     {
                         Console.WriteLine("DEBUG exit because elegage ! (max)");
+                        board[i][j] = '0';
                         return (Max);
                     }
                     if (Max.value > alpha)
@@ -449,13 +452,12 @@ class GomocupEngine : GomocupInterface
                     if (tmp.value < Min.value)
                     {
                         Min.value = tmp.value;
-                        Min.point.X = (ushort)j;
-                        Min.point.Y = (ushort)i;
                         Console.WriteLine("DEBUG ## min = " + Min.value);
                     }
                     if (Min.value <= alpha)
                     {
                         Console.WriteLine("DEBUG exit because elegage ! (min)");
+                        board[i][j] = '0';
                         return (Min);
                     }
                     if (Min.value < beta)
