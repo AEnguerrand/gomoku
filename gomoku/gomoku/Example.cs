@@ -416,11 +416,9 @@ class GomocupEngine : GomocupInterface
                         Max.value = tmp.value;
                         Max.point.X = (ushort)j;
                         Max.point.Y = (ushort)i;
-                        Console.WriteLine("DEBUG ## max = " + Max.value);
                     }
                     if (Max.value >= beta)
                     {
-                        Console.WriteLine("DEBUG exit because elegage ! (max)");
                         board[i][j] = '0';
                         return (Max);
                     }
@@ -450,13 +448,9 @@ class GomocupEngine : GomocupInterface
                     board[i][j] = '2';
                     tmp = Max(board, depth - 1, alpha, beta);
                     if (tmp.value < Min.value)
-                    {
                         Min.value = tmp.value;
-                        Console.WriteLine("DEBUG ## min = " + Min.value);
-                    }
                     if (Min.value <= alpha)
                     {
-                        Console.WriteLine("DEBUG exit because elegage ! (min)");
                         board[i][j] = '0';
                         return (Min);
                     }
@@ -473,8 +467,8 @@ class GomocupEngine : GomocupInterface
     {
         int alpha = -1000000000;
         int beta = 1000000000;
-        int highScore = -1000000000;
-        int tmp;
+        //int highScore = -1000000000;
+        //int tmp;
         //Point bestPos = new Point((ushort)(height / 2), (ushort)(width / 2));
 
         var move = Max(board, depth - 1, alpha, beta);
@@ -505,8 +499,8 @@ class GomocupEngine : GomocupInterface
 
     public override void brain_turn()
     {
-        Console.WriteLine("DEBUG TURN");
-        Console.WriteLine("DEBUG PRINT MAP BEFORE");
+        //Console.WriteLine("DEBUG TURN");
+        //Console.WriteLine("DEBUG PRINT MAP BEFORE");
         for (int i = 0; i < board.Count; i++)
         {
             string s = "";
@@ -514,15 +508,15 @@ class GomocupEngine : GomocupInterface
             {
                 s += board[i][j];
             }
-            Console.WriteLine("DEBUG {0}", s);
+            //Console.WriteLine("DEBUG {0}", s);
         }
         ResetScoreBoard();
-        Console.WriteLine("DEBUG avant findbestmove");
+        //Console.WriteLine("DEBUG avant findbestmove");
         Point pos = FindBestMove(2);
-        Console.WriteLine("DEBUG apres findbestmove");
-        Console.WriteLine("DEBUG [{0}, {1}]", pos.X, pos.Y);
+        //Console.WriteLine("DEBUG apres findbestmove");
+        //Console.WriteLine("DEBUG [{0}, {1}]", pos.X, pos.Y);
         do_mymove(pos.X, pos.Y);
-        Console.WriteLine("DEBUG PRINT MAP AFTER");
+        //Console.WriteLine("DEBUG PRINT MAP AFTER");
         for (int i = 0; i < board.Count; i++)
         {
             string s = "";
@@ -530,7 +524,7 @@ class GomocupEngine : GomocupInterface
             {
                 s += board[i][j];
             }
-            Console.WriteLine("DEBUG {0}", s);
+            //Console.WriteLine("DEBUG {0}", s);
         }
     }
 
