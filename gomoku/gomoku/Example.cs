@@ -14,6 +14,20 @@ public class Point
     }
 }
 
+public class Move
+{
+    public Point point;
+    public int value;
+    public bool eval;
+
+    public Move()
+    {
+        value = 0;
+        eval = false;
+        point = new Point(0, 0);
+    }
+}
+
 class GomocupEngine : GomocupInterface
 {
     const int MAX_BOARD = 100;
@@ -139,7 +153,7 @@ class GomocupEngine : GomocupInterface
         return 2;
     }
 
-    void resetScoreBoard()
+    void ResetScoreBoard()
     {
         for (int i = 0; i < scoreBoard.Count; ++i)
         {
@@ -148,161 +162,366 @@ class GomocupEngine : GomocupInterface
         }
     }
 
-    int checkDirection(int posX, int posY, int xDir, int yDir, int baseScoreMe, int baseScoreOp)
+    int CheckDirection(int posX, int posY, int xDir, int yDir, char player)
     {
-        if (posY < 0 && posY >= board.Count)
-            return (0);
-        int scoreMe = baseScoreMe;
-        int scoreOp = baseScoreOp;
-        bool stopMe = false;
-        bool stopOp = false;
-        int loop = 0;
-        for (int i = posY, j = posX; loop < 5 && (!stopMe || !stopOp) && i >= 0 && i < board.Count && j >= 0 && j < board[i].Count; i += yDir, j += xDir)
+        string s = "X";
+        bool blockCursor1 = false;
+        bool blockCursor2 = false;
+        for (int loop = 0, x1 = posX + xDir, y1 = posY + yDir, x2 = posX + xDir * -1, y2 = posY + yDir * -1;
+             loop < 5;
+             loop++, x1 += xDir, x2 += xDir * -1, y1 += yDir, y2 += yDir * -1)
         {
-            if (board[i][j] == '1' && !stopMe)
+            if (!blockCursor1)
             {
-                scoreMe += 10;
-                stopOp = true;
+                if (y1 < 0 || y1 >= board.Count || x1 < 0 || x1 >= board[y1].Count)
+                    blockCursor1 = true;
+                else if (board[y1][x1] == player)
+                    s = "X" + s;
+                else if (board[y1][x1] == '0')
+                    s = "H" + s;
+                else
+                    blockCursor1 = true;
             }
-            else if (board[i][j] == '2' && !stopOp)
+            if (!blockCursor2)
             {
-                scoreOp += 10;
-                stopMe = true;
+                if (y2 < 0 || y2 >= board.Count || x2 < 0 || x2 >= board[y2].Count)
+                    blockCursor2 = true;
+                else if (board[y2][x2] == player)
+                    s += "X";
+                else if (board[y2][x2] == '0')
+                    s += "H";
+                else
+                    blockCursor2 = true;
             }
-            loop += 1;
         }
-        return ((scoreMe > scoreOp) ? (scoreMe) : (scoreOp));
+        Console.WriteLine("DEBUG DIR: [{0}, {1}] | PLAYER: [{2}] | STRING: [{3}]", xDir, yDir, player, s);
+        if (s.Contains("XXXXX"))
+            return (41000000);
+        else if (s.Contains("HXXXXH"))
+            return (10100000);
+        else if (s.Contains("XXXXH") || s.Contains("HXXXX") || s.Contains("HXXXHH") || s.Contains("HHXXXH") || s.Contains("HXHXXH") ||
+            s.Contains("HXXHXH") || s.Contains("HXXXHX") || s.Contains("XHXXXH"))
+            return (2510000);
+        else if (s.Contains("XXXHH") || s.Contains("HHXXX") || s.Contains("XXHXH") || s.Contains("HXHXX") || s.Contains("XHXXH") ||
+                 s.Contains("HXXHX") || s.Contains("XXHHX") || s.Contains("XHHXX") || s.Contains("XHXHX"))
+            return (625100);
+        else if (s.Contains("XX"))
+            return (156260);
+        return (0);
     }
 
-    int CheckWeightAroundCell(int x, int y, out int baseScoreMe, out int baseScoreOp)
+    int _CheckAllDirections(int x, int y)
     {
-        baseScoreMe = 0;
-        baseScoreOp = 0;
-        
-        //E
-        if (x + 1 < board[y].Count && board[y][x + 1] == '1')
-            baseScoreMe += 5;
-        else if (x + 1 < board[y].Count && board[y][x + 1] == '2')
-            baseScoreOp += 5;
-
-        //W
-        if (x - 1 >= 0 && board[y][x - 1] == '1')
-            baseScoreMe += 5;
-        else if (x - 1 >= 0 && board[y][x - 1] == '2')
-            baseScoreOp += 5;
-
-        //S
-        if (y + 1 < board.Count && board[y + 1][x] == '1')
-            baseScoreMe += 5;
-        else if (y + 1 < board.Count && board[y + 1][x] == '2')
-            baseScoreOp += 5;
-
-        //N
-        if (y - 1 >= 0 && board[y - 1][x] == '1')
-            baseScoreMe += 5;
-        else if (y - 1 >= 0 && board[y - 1][x] == '2')
-            baseScoreOp += 5;
-
-        //SE
-        if (y + 1 < board.Count && x + 1 < board[y].Count && board[y + 1][x + 1] == '1')
-            baseScoreMe += 5;
-        else if (y + 1 < board.Count && x + 1 < board[y].Count && board[y + 1][x + 1] == '2')
-            baseScoreOp += 5;
-
-        //NW
-        if (y - 1 >= 0 && x - 1 >= 0 && board[y - 1][x - 1] == '1')
-            baseScoreMe += 5;
-        else if (y - 1 >= 0 && x - 1 >= 0 && board[y - 1][x - 1] == '2')
-            baseScoreOp += 5;
-
-        //NE
-        if (y - 1 >= 0 && x + 1 < board[y].Count && board[y - 1][x + 1] == '1')
-            baseScoreMe += 5;
-        else if (y - 1 >= 0 && x + 1 < board[y].Count && board[y - 1][x + 1] == '2')
-            baseScoreOp += 5;
-
-        //SW
-        if (y + 1 < board.Count && x - 1 >= 0 && board[y + 1][x - 1] == '1')
-            baseScoreMe += 5;
-        else if (y + 1 < board.Count && x - 1 >= 0 && board[y + 1][x - 1] == '2')
-            baseScoreOp += 5;
-
-        return ((baseScoreMe > baseScoreOp) ? (baseScoreMe) : (baseScoreOp));
+        List<int> weightsMe = new List<int>
+        {
+            CheckDirection(x, y, 0, 1, '1'),
+            CheckDirection(x, y, 1, 0, '1'),
+            CheckDirection(x, y, 1, 1, '1'),
+            CheckDirection(x, y, -1, 1, '1')
+        };
+        List<int> weightsOp = new List<int>
+        {
+            CheckDirection(x, y, 0, 1, '2'),
+            CheckDirection(x, y, 1, 0, '2'),
+            CheckDirection(x, y, 1, 1, '2'),
+            CheckDirection(x, y, -1, 1, '2')
+        };
+        Console.WriteLine("DEBUG [{0}, {1}]", x, y);
+        //Console.WriteLine("DEBUG weightsMe: {0}", JsonConvert.SerializeObject(weightsMe));
+        //Console.WriteLine("DEBUG weightsOp: {0}", JsonConvert.SerializeObject(weightsOp));
+        int sumMe = weightsMe.Sum();
+        int sumOp = weightsOp.Sum();
+        Console.WriteLine("DEBUG sumMe: {0} | sumOp {1}", sumMe, sumOp);
+        Console.WriteLine("DEBUG ------------------------------");
+        return ((sumMe >= sumOp) ? (sumMe) : (sumOp));
     }
 
-    List<int> checkAllDirections(int x, int y)
-    {
-        List<int> list = new List<int>();
-        CheckWeightAroundCell(x, y, out int baseScoreMe, out int baseScoreOp);
+    //int CheckAllDirections(List<List<char>> board)
+    //{
+    //    List<int> weightsMe = new List<int>
+    //    {
+    //        CheckDirection(x, y, 0, 1, '1'),
+    //        CheckDirection(x, y, 1, 0, '1'),
+    //        CheckDirection(x, y, 1, 1, '1'),
+    //        CheckDirection(x, y, -1, 1, '1')
+    //    };
+    //    List<int> weightsOp = new List<int>
+    //    {
+    //        CheckDirection(x, y, 0, 1, '2'),
+    //        CheckDirection(x, y, 1, 0, '2'),
+    //        CheckDirection(x, y, 1, 1, '2'),
+    //        CheckDirection(x, y, -1, 1, '2')
+    //    };
+    //    Console.WriteLine("DEBUG [{0}, {1}]", x, y);
+    //    //Console.WriteLine("DEBUG weightsMe: {0}", JsonConvert.SerializeObject(weightsMe));
+    //    //Console.WriteLine("DEBUG weightsOp: {0}", JsonConvert.SerializeObject(weightsOp));
+    //    int sumMe = weightsMe.Sum();
+    //    int sumOp = weightsOp.Sum();
+    //    Console.WriteLine("DEBUG sumMe: {0} | sumOp {1}", sumMe, sumOp);
+    //    Console.WriteLine("DEBUG ------------------------------");
+    //    return ((sumMe >= sumOp) ? (sumMe) : (sumOp));
+    //}
 
-        // E
-        list.Add(checkDirection(x - 1, y, 1, 0, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x, y, 1, 0, baseScoreMe, baseScoreOp));
-        // W
-        list.Add(checkDirection(x + 2, y, -1, 0, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x + 1, y, -1, 0, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x, y, -1, 0, baseScoreMe, baseScoreOp));
-        // S
-        list.Add(checkDirection(x, y - 1, 0, 1, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x, y, 0, 1, baseScoreMe, baseScoreOp));
-        // N
-        list.Add(checkDirection(x, y + 2, 0, -1, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x, y + 1, 0, -1, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x, y, 0, -1, baseScoreMe, baseScoreOp));
-        // SE
-        list.Add(checkDirection(x - 1, y - 1, 1, 1, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x, y, 1, 1, baseScoreMe, baseScoreOp));
-        // NW
-        list.Add(checkDirection(x + 2, y + 2, -1, -1, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x + 2, y + 1, -1, -1, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x, y, -1, -1, baseScoreMe, baseScoreOp));
-        // SW
-        list.Add(checkDirection(x + 1, y - 1, -1, 1, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x, y, -1, 1, baseScoreMe, baseScoreOp));
-        // NE
-        list.Add(checkDirection(x - 2, y + 2, 1, -1, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x - 1, y + 1, 1, -1, baseScoreMe, baseScoreOp));
-        list.Add(checkDirection(x, y, 1, -1, baseScoreMe, baseScoreOp));
-        return (list);
+
+
+
+
+
+    char ChangeIntoPlayerChar(char c)
+    {
+        if (c == '0')
+            return ('H');
+        else if (c == '1' || c == '2')
+            return (c);
+        return ('H');
     }
 
-    Point findBestMove()
+    bool WinningBoard(List<List<char>> board)
     {
-        Console.WriteLine("DEBUG debut findbestmove");
-        int highScore = 0;
-        int max;
-        Point bestPos = new Point((ushort)(height / 2), (ushort)(width / 2));
+        string diagLR = "", diagRL = "", ver = "", hor = "";
 
-        for (int i = 0; i < board.Count; ++i)
+        //Diag LeftRight
+        for (int i = 0; i < board.Count; i++)
+        {
+            diagLR = "";
+            for (int j = 0, tmpI = i; j <= i; j++, tmpI--)
+                diagLR += ChangeIntoPlayerChar(board[tmpI][j]);
+            if (EvalString(diagLR.Replace('1', 'X')) == 41000000 || EvalString(diagLR.Replace('2', 'X')) == 41000000)
+                return (true);
+        }
+        for (int j = 1; j < board[0].Count; j++)
+        {
+            diagLR = "";
+            for (int i = board.Count - 1, tmpJ = j; tmpJ < board[i].Count; i--, tmpJ++)
+                diagLR += ChangeIntoPlayerChar(board[i][tmpJ]);
+            if (EvalString(diagLR.Replace('1', 'X')) == 41000000 || EvalString(diagLR.Replace('2', 'X')) == 41000000)
+                return (true);
+        }
+
+        //Diag RightLeft
+        for (int i = 0; i < board.Count; i++)
+        {
+            diagRL = "";
+            for (int j = board[i].Count - 1, tmpI = i; tmpI >= 0; j--, tmpI--)
+                diagRL += ChangeIntoPlayerChar(board[tmpI][j]);
+            if (EvalString(diagRL.Replace('1', 'X')) == 41000000 || EvalString(diagRL.Replace('2', 'X')) == 41000000)
+                return (true);
+        }
+        for (int j = board[0].Count - 2; j >= 0; j--)
+        {
+            diagRL = "";
+            for (int i = board.Count - 1, tmpJ = j; tmpJ >= 0; i--, tmpJ--)
+                diagRL += ChangeIntoPlayerChar(board[i][tmpJ]);
+            if (EvalString(diagRL.Replace('1', 'X')) == 41000000 || EvalString(diagRL.Replace('2', 'X')) == 41000000)
+                return (true);
+        }
+
+        //HorizontalAndVertical
+        for (int i = 0; i < board.Count; i++)
+        {
+            ver = "";
+            hor = "";
+            for (int j = 0; j < board[i].Count; j++)
+            {
+                hor += ChangeIntoPlayerChar(board[i][j]);
+                ver += ChangeIntoPlayerChar(board[j][i]);
+            }
+            if (EvalString(hor.Replace('1', 'X')) == 41000000 || EvalString(hor.Replace('2', 'X')) == 41000000 ||
+                EvalString(ver.Replace('1', 'X')) == 41000000 || EvalString(ver.Replace('2', 'X')) == 41000000)
+                return (true);
+        }
+        return (false);
+    }
+
+    int EvalString(string s)
+    {
+        //Console.WriteLine("DEBUG EVALSTRING: [{0}]", s);
+        if (s.Contains("XXXXX"))
+            return (41000000);
+        else if (s.Contains("HXXXXH"))
+            return (10100000);
+        else if (s.Contains("XXXXH") || s.Contains("HXXXX") || s.Contains("HXXXHH") || s.Contains("HHXXXH") || s.Contains("HXHXXH") ||
+            s.Contains("HXXHXH") || s.Contains("XXXHX") || s.Contains("XHXXX") || s.Contains("XXHXX"))
+            return (2510000);
+        else if (s.Contains("XXXHH") || s.Contains("HHXXX") || s.Contains("XXHXH") || s.Contains("HXHXX") || s.Contains("XHXXH") ||
+                 s.Contains("HXXHX") || s.Contains("XXHHX") || s.Contains("XHHXX") || s.Contains("XHXHX") || s.Contains("HXXXH"))
+            return (625100);
+        else if (s.Contains("XX"))
+            return (156260);
+        return (0);
+    }
+
+    Move Eval(List<List<char>> board)
+    {
+        string diagLR = "", diagRL = "", ver = "", hor = "";
+        int evalMe = 0, evalOp = 0;
+
+        //Diag LeftRight
+        for (int i = 0; i < board.Count; i++)
+        {
+            diagLR = "";
+            for (int j = 0, tmpI = i; j <= i; j++, tmpI--)
+                diagLR += ChangeIntoPlayerChar(board[tmpI][j]);
+            evalMe += EvalString(diagLR.Replace('1', 'X'));
+            evalOp += EvalString(diagLR.Replace('2', 'X'));
+        }
+        for (int j = 1; j < board[0].Count; j++)
+        {
+            diagLR = "";
+            for (int i = board.Count - 1, tmpJ = j; tmpJ < board[i].Count; i--, tmpJ++)
+                diagLR += ChangeIntoPlayerChar(board[i][tmpJ]);
+            evalMe += EvalString(diagLR.Replace('1', 'X'));
+            evalOp += EvalString(diagLR.Replace('2', 'X'));
+        }
+
+        //Diag RightLeft
+        for (int i = 0; i < board.Count; i++)
+        {
+            diagRL = "";
+            for (int j = board[i].Count - 1, tmpI = i; tmpI >= 0; j--, tmpI--)
+                diagRL += ChangeIntoPlayerChar(board[tmpI][j]);
+            evalMe += EvalString(diagRL.Replace('1', 'X'));
+            evalOp += EvalString(diagRL.Replace('2', 'X'));
+        }
+        for (int j = board[0].Count - 2; j >= 0; j--)
+        {
+            diagRL = "";
+            for (int i = board.Count - 1, tmpJ = j; tmpJ >= 0; i--, tmpJ--)
+                diagRL += ChangeIntoPlayerChar(board[i][tmpJ]);
+            evalMe += EvalString(diagRL.Replace('1', 'X'));
+            evalOp += EvalString(diagRL.Replace('2', 'X'));
+        }
+
+        //HorizontalAndVertical
+        for (int i = 0; i < board.Count; i++)
+        {
+            ver = "";
+            hor = "";
+            for (int j = 0; j < board[i].Count; j++)
+            {
+                hor += ChangeIntoPlayerChar(board[i][j]);
+                ver += ChangeIntoPlayerChar(board[j][i]);
+            }
+            evalMe += EvalString(hor.Replace('1', 'X')) + EvalString(ver.Replace('1', 'X'));
+            evalOp += EvalString(hor.Replace('2', 'X')) + EvalString(ver.Replace('2', 'X'));
+        }
+        //Console.WriteLine("DEBUG [ME]: {0} | [OP]: {1}", evalMe, evalOp);
+        Move output = new Move();
+        output.eval = true;
+        output.value = evalMe - evalOp;
+        output.point.X = (ushort)(height / 2);
+        output.point.Y = (ushort)(width / 2);
+        return (output);
+    }
+
+    Move Max(List<List<char>> board, int depth, int alpha, int beta)
+    {
+        if (depth == 0 || WinningBoard(board))
+            return Eval(board);
+
+        Move Max = new Move();
+        Max.point.X = Max.point.Y = 0;
+        Max.value = -1000000000;
+        Move tmp = new Move();
+
+        for (int i = 0; i < board.Count; i++)
+        {
+            for (int j = 0; j < board[i].Count; j++)
+            {
+                if (board[i][j] == '0')
+                {
+                    board[i][j] = '1';
+                    tmp = Min(board, depth - 1, alpha, beta);
+                    if (tmp.value > Max.value)
+                    {
+                        Max.value = tmp.value;
+                        Max.point.X = (ushort)j;
+                        Max.point.Y = (ushort)i;
+                    }
+                    if (Max.value >= beta)
+                    {
+                        board[i][j] = '0';
+                        return (Max);
+                    }
+                    if (Max.value > alpha)
+                        alpha = Max.value;
+                    board[i][j] = '0';
+                }
+            }
+        }
+        return (Max);
+    }
+
+    Move Min(List<List<char>> board, int depth, int alpha, int beta)
+    {
+        if (depth == 0 || WinningBoard(board))
+            return Eval(board);
+        Move Min = new Move();
+        Min.value = 1000000000;
+        Move tmp = new Move();
+
+        for (int i = 0; i < board.Count; i++)
+        {
+            for (int j = 0; j < board[i].Count; j++)
+            {
+                if (board[i][j] == '0')
+                {
+                    board[i][j] = '2';
+                    tmp = Max(board, depth - 1, alpha, beta);
+                    if (tmp.value < Min.value)
+                        Min.value = tmp.value;
+                    if (Min.value <= alpha)
+                    {
+                        board[i][j] = '0';
+                        return (Min);
+                    }
+                    if (Min.value < beta)
+                        beta = Min.value;
+                    board[i][j] = '0';
+                }
+            }
+        }
+        return (Min);
+    }
+
+    Point FindBestMove(int depth)
+    {
+        int alpha = -1000000000;
+        int beta = 1000000000;
+        //int highScore = -1000000000;
+        //int tmp;
+        //Point bestPos = new Point((ushort)(height / 2), (ushort)(width / 2));
+
+        var move = Max(board, depth - 1, alpha, beta);
+
+        Point bestPos = new Point(move.point.X, move.point.Y);
+
+       /* for (int i = 0; i < board.Count; ++i)
         {
             for (int j = 0; j < board[i].Count; ++j)
             {
                 if (board[i][j] == '0')
                 {
-                    List<int> weights = checkAllDirections(j, i);
-                    max = 0;
-                    for (int k = 0; k < weights.Count; k++)
+                    board[i][j] = '1';
+                    tmp = Min(board, depth - 1, alpha, beta);
+                    Console.WriteLine("DEBUG [{0}, {1}]: WEIGHT FOUND => {2}", j, i, tmp);
+                    Console.WriteLine("DEBUG ---------------------------------");
+                    if (tmp > highScore)
                     {
-                        if (max < weights[k])
-                            max = weights[k];
-                    }
-                    Console.WriteLine("DEBUG [{0}, {1}] => {2}", j, i, max);
-                    scoreBoard[i][j] = max;
-                    if (highScore < scoreBoard[i][j])
-                    {
-                        highScore = scoreBoard[i][j];
+                        highScore = tmp;
                         bestPos = new Point((ushort)j, (ushort)i);
                     }
+                    board[i][j] = '0';
                 }
             }
-        }
+        }*/
         return (bestPos);
     }
 
     public override void brain_turn()
     {
-        Console.WriteLine("DEBUG TURN");
-        Console.WriteLine("DEBUG PRINT MAP BEFORE");
+        //Console.WriteLine("DEBUG TURN");
+        //Console.WriteLine("DEBUG PRINT MAP BEFORE");
         for (int i = 0; i < board.Count; i++)
         {
             string s = "";
@@ -310,15 +529,15 @@ class GomocupEngine : GomocupInterface
             {
                 s += board[i][j];
             }
-            Console.WriteLine("DEBUG {0}", s);
+            //Console.WriteLine("DEBUG {0}", s);
         }
-        resetScoreBoard();
-        Console.WriteLine("DEBUG avant findbestmove");
-        Point pos = findBestMove();
-        Console.WriteLine("DEBUG apres findbestmove");
-        Console.WriteLine("DEBUG [{0}, {1}]", pos.X, pos.Y);
+        ResetScoreBoard();
+        //Console.WriteLine("DEBUG avant findbestmove");
+        Point pos = FindBestMove(2);
+        //Console.WriteLine("DEBUG apres findbestmove");
+        //Console.WriteLine("DEBUG [{0}, {1}]", pos.X, pos.Y);
         do_mymove(pos.X, pos.Y);
-        Console.WriteLine("DEBUG PRINT MAP AFTER");
+        //Console.WriteLine("DEBUG PRINT MAP AFTER");
         for (int i = 0; i < board.Count; i++)
         {
             string s = "";
@@ -326,7 +545,7 @@ class GomocupEngine : GomocupInterface
             {
                 s += board[i][j];
             }
-            Console.WriteLine("DEBUG {0}", s);
+            //Console.WriteLine("DEBUG {0}", s);
         }
     }
 
