@@ -295,6 +295,6 @@ abstract class GomocupInterface
 
     static void Main(string[] args)
     {
-        new GomocupEngine().main();
+        new Brain().main();
     }
 }

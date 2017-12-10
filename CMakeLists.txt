@@ -4,7 +4,7 @@ project(gomoku CSharp)
 
 set(Targetname pbrain-nexusl)
 
-add_executable(${Targetname} ./gomoku/gomoku/Example.cs ./gomoku/gomoku/PisqPipe.cs)
+add_executable(${Targetname} ./gomoku/gomoku/Brain.cs ./gomoku/gomoku/PisqPipe.cs ./gomoku/gomoku/Point.cs)
 
 add_custom_command(TARGET ${Targetname}
                    POST_BUILD
