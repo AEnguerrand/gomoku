@@ -1,31 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System;
+using gomoku;
 
-public class Point
-{
-    public ushort X;
-    public ushort Y;
-
-    public Point(ushort x, ushort y)
-    {
-        X = x;
-        Y = y;
-    }
-}
-
-class GomocupEngine : GomocupInterface
+class Brain : GomocupInterface
 {
     const int MAX_BOARD = 100;
     List<List<char>> board = new List<List<char>>();
-    List<List<int>> scoreBoard = new List<List<int>>();
-    Random rand = new Random();
 
     public override string brain_about
     {
         get
         {
-            return "name=\"Random\", author=\"Petr Lastovicka\", version=\"1.1\", country=\"Czech Republic\", www=\"http://petr.lastovicka.sweb.cz\"";
+            return "name=\"NexusL\", author=\"Nexus\", version=\"0.42\", country=\"France\", www=\"http://nexus-software.fr\"";
         }
     }
 
@@ -41,7 +28,7 @@ class GomocupEngine : GomocupInterface
             Console.WriteLine("ERROR Maximal board size is " + MAX_BOARD);
             return;
         }
-        
+
         for (int i = 0; i < height; i++)
         {
             board.Add(new List<char>());
@@ -49,12 +36,6 @@ class GomocupEngine : GomocupInterface
                 board[i].Add('0');
         }
 
-        for (int i = 0; i < height; i++)
-        {
-            scoreBoard.Add(new List<int>());
-            for (int j = 0; j < width; j++)
-                scoreBoard[i].Add(0);
-        }
         Console.WriteLine("OK");
     }
 
@@ -118,15 +99,6 @@ class GomocupEngine : GomocupInterface
         return 2;
     }
 
-    void ResetScoreBoard()
-    {
-        for (int i = 0; i < scoreBoard.Count; ++i)
-        {
-            for (int j = 0; j < scoreBoard[i].Count; ++j)
-                scoreBoard[i][j] = 0;
-        }
-    }
-
     int CheckDirection(int posX, int posY, int xDir, int yDir, char player)
     {
         string s = "X";
@@ -159,7 +131,6 @@ class GomocupEngine : GomocupInterface
                     blockCursor2 = true;
             }
         }
-        //Console.WriteLine("DEBUG DIR: [{0}, {1}] | PLAYER: [{2}] | STRING: [{3}]", xDir, yDir, player, s);
         if (s.Contains("XXXXX"))
             return (41000000);
         else if (s.Contains("HXXXXH"))
@@ -191,13 +162,8 @@ class GomocupEngine : GomocupInterface
             CheckDirection(x, y, 1, 1, '2'),
             CheckDirection(x, y, -1, 1, '2')
         };
-        //Console.WriteLine("DEBUG [{0}, {1}]", x, y);
-        //Console.WriteLine("DEBUG weightsMe: {0}", JsonConvert.SerializeObject(weightsMe));
-        //Console.WriteLine("DEBUG weightsOp: {0}", JsonConvert.SerializeObject(weightsOp));
         int sumMe = weightsMe.Sum();
         int sumOp = weightsOp.Sum();
-        //Console.WriteLine("DEBUG sumMe: {0} | sumOp {1}", sumMe, sumOp);
-        //Console.WriteLine("DEBUG ------------------------------");
         return ((sumMe >= sumOp) ? (sumMe) : (sumOp));
     }
 
@@ -212,10 +178,10 @@ class GomocupEngine : GomocupInterface
             {
                 if (board[i][j] == '0')
                 {
-                    scoreBoard[i][j] = CheckAllDirections(j, i);
-                    if (highScore < scoreBoard[i][j])
+                    int weight = CheckAllDirections(j, i);
+                    if (highScore < weight)
                     {
-                        highScore = scoreBoard[i][j];
+                        highScore = weight;
                         bestPos = new Point((ushort)j, (ushort)i);
                     }
                 }
@@ -226,33 +192,8 @@ class GomocupEngine : GomocupInterface
 
     public override void brain_turn()
     {
-        //Console.WriteLine("DEBUG TURN");
-        //Console.WriteLine("DEBUG PRINT MAP BEFORE");
-        for (int i = 0; i < board.Count; i++)
-        {
-            string s = "";
-            for (int j = 0; j < board[i].Count; j++)
-            {
-                s += board[i][j];
-            }
-            //Console.WriteLine("DEBUG {0}", s);
-        }
-        ResetScoreBoard();
-        //Console.WriteLine("DEBUG avant findbestmove");
         Point pos = FindBestMove();
-        //Console.WriteLine("DEBUG apres findbestmove");
-        //Console.WriteLine("DEBUG [{0}, {1}]", pos.X, pos.Y);
         do_mymove(pos.X, pos.Y);
-        //Console.WriteLine("DEBUG PRINT MAP AFTER");
-        for (int i = 0; i < board.Count; i++)
-        {
-            string s = "";
-            for (int j = 0; j < board[i].Count; j++)
-            {
-                s += board[i][j];
-            }
-            //Console.WriteLine("DEBUG {0}", s);
-        }
     }
 
     public override void brain_end()
