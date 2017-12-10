@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.8)
 
 project(gomoku CSharp)
 
-add_executable(pbrain-nexusl ./gomoku/gomoku/Example.cs ./gomoku/gomoku/PisqPipe.cs)
+set(Targetname pbrain-nexusl)
 
-install(TARGETS pbrain-nexusl DESTINATION ./)
+add_executable(${Targetname} ./gomoku/gomoku/Example.cs ./gomoku/gomoku/PisqPipe.cs)
+
+add_custom_command(TARGET ${Targetname}
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${Targetname}> ${CMAKE_CURRENT_BINARY_DIR})
