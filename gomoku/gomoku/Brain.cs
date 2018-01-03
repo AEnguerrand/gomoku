@@ -147,7 +147,7 @@ class Brain : GomocupInterface
         s.Contains("HHHXX"))
             return (156260);
         else if (s.Contains("X"))
-            return (100 * (s.Split('/').Length - 1));
+            return (100 * (s.Split('X').Length - 1));
         return (0);
     }
 
