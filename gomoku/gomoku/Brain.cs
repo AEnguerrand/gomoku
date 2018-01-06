@@ -136,13 +136,18 @@ class Brain : GomocupInterface
         else if (s.Contains("HXXXXH"))
             return (10100000);
         else if (s.Contains("XXXXH") || s.Contains("HXXXX") || s.Contains("HXXXHH") || s.Contains("HHXXXH") || s.Contains("HXHXXH") ||
-            s.Contains("HXXHXH") || s.Contains("HXXXHX") || s.Contains("XHXXXH") || s.Contains("XXXHX") || s.Contains("XHXXX"))
+            s.Contains("HXXHXH") || s.Contains("XXXHX") || s.Contains("XHXXX") || s.Contains("XXHXX"))
             return (2510000);
-        else if (s.Contains("XXXHH") || s.Contains("HHXXX") || s.Contains("XXHXH") || s.Contains("HXHXX") || s.Contains("XHXXH") ||
+        else if (s.Contains("XXXHH") || s.Contains("XXXHH") || s.Contains("HHXXX") || s.Contains("XXHXH") || s.Contains("HXHXX") || s.Contains("XHXXH") ||
                  s.Contains("HXXHX") || s.Contains("XXHHX") || s.Contains("XHHXX") || s.Contains("XHXHX"))
             return (625100);
-        else if (s.Contains("XX"))
+        else if (s.Contains("XXHHH") || s.Contains("XHXHH") || s.Contains("XHHXH") || s.Contains("XHHHX") ||
+        s.Contains("HXXHH") || s.Contains("HXHXH") || s.Contains("HXHHX") ||
+        s.Contains("HHXXH") || s.Contains("HHXHX") ||
+        s.Contains("HHHXX"))
             return (156260);
+        else if (s.Contains("X"))
+            return (100 * (s.Split('X').Length - 1));
         return (0);
     }
 
